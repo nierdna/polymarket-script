@@ -19,6 +19,7 @@ function loadConfig() {
     CONDITION_ID: process.env.CONDITION_ID,
     AMOUNT: process.env.AMOUNT || '100',
     PARTITION: process.env.PARTITION ? JSON.parse(process.env.PARTITION) : null,
+    INDEX_SETS: process.env.INDEX_SETS ? JSON.parse(process.env.INDEX_SETS) : null,
     PARENT_COLLECTION_ID: process.env.PARENT_COLLECTION_ID || ethers.constants.HashZero,
     GAS_LIMIT: parseInt(process.env.GAS_LIMIT || '300000'),
   };
@@ -152,6 +153,58 @@ async function calculatePositionIds(ctf, collateralAddress, parentCollectionId, 
   return positionIds;
 }
 
+// Check condition đã resolved chưa
+async function checkConditionResolved(ctf, conditionId) {
+  const denominator = await ctf.payoutDenominator(conditionId);
+  if (denominator.eq(0)) {
+    console.error("❌ Condition not resolved yet (no payout denominator)");
+    console.error("   Condition needs to be resolved before redemption");
+    process.exit(1);
+  }
+  return denominator;
+}
+
+// Get payout info (denominator và numerators)
+async function getPayoutInfo(ctf, conditionId, outcomeSlotCount) {
+  const denominator = await ctf.payoutDenominator(conditionId);
+  const numerators = [];
+  for (let i = 0; i < outcomeSlotCount; i++) {
+    const num = await ctf.payoutNumerators(conditionId, i);
+    numerators.push(num);
+  }
+  return { denominator, numerators };
+}
+
+// Auto-detect indexSets có balance > 0
+async function autoDetectIndexSets(ctf, wallet, collateralAddress, parentCollectionId, conditionId, outcomeSlotCount) {
+  const indexSets = [];
+  
+  // Check tất cả single outcomes (1, 2, 4, 8...)
+  for (let i = 0; i < outcomeSlotCount; i++) {
+    const indexSet = 1 << i;
+    const collectionId = await ctf.getCollectionId(parentCollectionId, conditionId, indexSet);
+    const positionId = await ctf.getPositionId(collateralAddress, collectionId);
+    const balance = await ctf.balanceOf(wallet.address, positionId);
+    
+    if (balance.gt(0)) {
+      indexSets.push(indexSet);
+    }
+  }
+  
+  return indexSets;
+}
+
+// Validate indexSets
+function validateIndexSets(indexSets, outcomeSlotCount) {
+  const fullIndexSet = (1 << outcomeSlotCount) - 1;
+  for (const indexSet of indexSets) {
+    if (indexSet <= 0 || indexSet >= fullIndexSet) {
+      console.error(`❌ Invalid index set: ${indexSet}`);
+      process.exit(1);
+    }
+  }
+}
+
 module.exports = {
   loadConfig,
   loadABIs,
@@ -164,5 +217,9 @@ module.exports = {
   validatePartition,
   getTokenInfo,
   calculatePositionIds,
+  checkConditionResolved,
+  getPayoutInfo,
+  autoDetectIndexSets,
+  validateIndexSets,
 };
 

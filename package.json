@@ -5,7 +5,8 @@
   "main": "splitPosition.js",
   "scripts": {
     "split": "node splitPosition.js",
-    "merge": "node mergePosition.js"
+    "merge": "node mergePosition.js",
+    "redeem": "node redeemPosition.js"
   },
   "keywords": [
     "conditional-tokens",
