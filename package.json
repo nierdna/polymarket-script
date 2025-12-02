@@ -1,0 +1,25 @@
+{
+  "name": "polymarket-script",
+  "version": "1.0.0",
+  "description": "Scripts for interacting with Conditional Tokens contracts",
+  "main": "splitPosition.js",
+  "scripts": {
+    "split": "node splitPosition.js"
+  },
+  "keywords": [
+    "conditional-tokens",
+    "polymarket",
+    "ethereum",
+    "defi"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^5.7.2",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
+
