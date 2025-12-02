@@ -4,7 +4,8 @@
   "description": "Scripts for interacting with Conditional Tokens contracts",
   "main": "splitPosition.js",
   "scripts": {
-    "split": "node splitPosition.js"
+    "split": "node splitPosition.js",
+    "merge": "node mergePosition.js"
   },
   "keywords": [
     "conditional-tokens",
